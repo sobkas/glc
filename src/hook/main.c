@@ -41,6 +41,8 @@
 #define MAIN_COMPRESS_LZJB        0x40
 #define MAIN_START                0x80
 
+#define W_PULSEAUDIO
+
 struct main_private_s {
 	glc_t glc;
 	glc_flags_t flags;
@@ -115,6 +117,10 @@ void init_glc()
 		goto err;
 	if ((ret = x11_init(&mpriv.glc)))
 		goto err;
+#ifdef W_PULSEAUDIO
+	if ((ret = pulse_init(&mpriv.glc)))
+		goto err;
+#endif
 
 	/* get current time for correct timediff */
 	mpriv.stop_time = glc_state_time(&mpriv.glc);
@@ -272,6 +278,10 @@ int start_capture()
 		goto err;
 	if ((ret = opengl_capture_start()))
 		goto err;
+#ifdef W_PULSEAUDIO
+	if((ret = pulse_capture_start_all()))
+		goto err;
+#endif
 
 	glc_state_time_add_diff(&mpriv.glc, glc_state_time(&mpriv.glc) - mpriv.stop_time);
 	lib.flags |= LIB_CAPTURING;
@@ -295,6 +305,10 @@ int stop_capture()
 		goto err;
 	if ((ret = opengl_capture_stop()))
 		goto err;
+#ifdef W_PULSEAUDIO
+	if ((ret = pulse_capture_stop_all()))
+		goto err;
+#endif
 
 	lib.flags &= ~LIB_CAPTURING;
 	mpriv.stop_time = glc_state_time(&mpriv.glc);
@@ -354,6 +368,10 @@ int start_glc()
 		return ret;
 	if ((ret = opengl_start(mpriv.uncompressed)))
 		return ret;
+#ifdef W_PULSEAUDIO
+	if ((ret = pulse_start(mpriv.uncompressed)))
+		return ret;
+#endif
 
 	lib.running = 1;
 	glc_log(&mpriv.glc, GLC_INFORMATION, "main", "glc running");
@@ -408,6 +426,10 @@ void lib_close()
 		goto err;
 	if ((ret = opengl_close()))
 		goto err;
+#ifdef W_PULSEAUDIO
+	if ((ret = pulse_close()))
+		goto err;
+#endif
 
 	if (lib.running) {
 		if (!(mpriv.flags & MAIN_COMPRESS_NONE)) {

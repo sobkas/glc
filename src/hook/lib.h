@@ -72,6 +72,17 @@ __PRIVATE int alsa_unhook_so(const char *soname);
 /**  \} */
 
 /**
+ * \addtogroup pulse
+ * \{
+ */
+__PRIVATE int pulse_init(glc_t *glc);
+__PRIVATE int pulse_start(ps_buffer_t *buffer);
+__PRIVATE int pulse_close();
+__PRIVATE int pulse_capture_start_all();
+__PRIVATE int pulse_capture_stop_all();
+/**  \} */
+
+/**
  * \addtogroup opengl
  *  \{
  */
