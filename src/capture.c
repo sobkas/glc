@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
 		{'f', "fps",			"GLC_FPS",			NULL},
 		{'r', "resize",			"GLC_SCALE",			NULL},
 		{'c', "crop",			"GLC_CROP",			NULL},
-		{'a', "record-audio",		"GLC_AUDIO_RECORD",		NULL},
+		{'a', "audio-devices",	"GLC_AUDIO_DEVICES",		NULL},
+		{'p', "pulseaudio",		"GLC_USE_PULSEAUDIO",		"1"},
 		{'s', "start",			"GLC_START",			 "1"},
 		{'e', "colorspace",		"GLC_COLORSPACE",		NULL},
 		{'k', "hotkey",			"GLC_HOTKEY",			NULL},
@@ -154,7 +155,8 @@ usage:
 	       "  -f, --fps=FPS              capture at FPS, default value is 30\n"
 	       "  -r, --resize=FACTOR        resize pictures with scale factor FACTOR\n"
 	       "  -c, --crop=WxH+X+Y         capture only [width]x[height][+[x][+[y]]]\n"
-	       "  -a, --record-audio=CONFIG  record specified alsa devices\n"
+	       "  -p, --pulseaudio           use pulseaudio instead of alsa\n"
+	       "  -a, --audio-devices=CONFIG  record specified alsa/pulse devices\n"
 	       "                               format is device,rate,channels;device2...\n"
 	       "  -s, --start                start capturing immediately\n"
 	       "  -e, --colorspace=CSP       keep as 'bgr' or convert to '420jpeg'\n"

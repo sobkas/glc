@@ -55,6 +55,8 @@ struct pulse_private_s {
 	ps_packet_t packet;
 	pa_threaded_mainloop *loop;
 	pa_context *context;
+	int context_ready;
+	int capture_when_context_ready;
 
 	struct pulse_capture_stream_s *capture_stream;
 };
@@ -63,6 +65,8 @@ __PRIVATE struct pulse_private_s pulse;
 __PRIVATE int pulse_loaded = 0;
 
 __PRIVATE int pulse_parse_capture_cfg(const char *cfg);
+__PRIVATE void pulse_capture_connect_all();
+__PRIVATE void pulse_capture_disconnect_all();
 __PRIVATE glc_audio_format_t pulse_glc_format(pa_sample_format_t pcm_fmt);
 static void pulse_context_state_callback(pa_context *c, void *userdata);
 static void stream_read_callback(pa_stream *s, size_t length, void *userdata);
@@ -76,12 +80,13 @@ int pulse_init(glc_t *glc) {
 
 	glc_log(pulse.glc, GLC_DEBUG, "pulse", "initializing");
 
-	pulse.capture = 0;
-	if (!getenv("GLC_DISABLE_AUDIO") && getenv("GLC_PULSE_RECORD"))
+	if (getenv("GLC_AUDIO") && getenv("GLC_USE_PULSEAUDIO"))
+		pulse.capture = atoi(getenv("GLC_AUDIO"));
+	else
 		pulse.capture = 1;
 
-	if (getenv("GLC_PULSE_RECORD"))
-		pulse_parse_capture_cfg(getenv("GLC_PULSE_RECORD"));
+	if (getenv("GLC_AUDIO_DEVICES") && getenv("GLC_USE_PULSEAUDIO"))
+		pulse_parse_capture_cfg(getenv("GLC_AUDIO_DEVICES"));
 	
 	if(pulse.capture) {
 		if (!(pulse.loop = pa_threaded_mainloop_new()))
@@ -103,6 +108,31 @@ int pulse_init(glc_t *glc) {
 	return 0;
 }
 
+void pulse_init_streams() {
+	pa_context *c = pulse.context;
+	struct pulse_capture_stream_s *stream = pulse.capture_stream;
+
+	while(stream != NULL) {
+
+		pa_sample_spec sample_spec = {
+			.format = stream->format,
+			.rate = stream->rate,
+			.channels = stream->channels
+		};
+
+        // lets call the stream like the device
+		if(!(stream->pulse_stream = pa_stream_new(c, stream->device, &sample_spec, NULL))) {
+			glc_log(pulse.glc, GLC_ERROR, "pulse", ("pa_stream_new() failed: %s\n"), pa_strerror(pa_context_errno(c)));
+            return;
+    	}
+
+		pa_stream_set_state_callback(stream->pulse_stream, stream_state_callback, (void*)stream);
+		pa_stream_set_read_callback(stream->pulse_stream, stream_read_callback, (void*)stream);
+
+		stream = stream->next;
+	}
+}
+
 static void pulse_context_state_callback(pa_context *c, void *userdata) {
     switch(pa_context_get_state(c)) {
         case PA_CONTEXT_CONNECTING:
@@ -110,34 +140,12 @@ static void pulse_context_state_callback(pa_context *c, void *userdata) {
         case PA_CONTEXT_SETTING_NAME:
             break;
         case PA_CONTEXT_READY: {
-        	
-    		struct pulse_capture_stream_s *stream = pulse.capture_stream;
-
-			while(stream != NULL) {
-
-				pa_sample_spec sample_spec = {
-					.format = stream->format,
-					.rate = stream->rate,
-					.channels = stream->channels
-				};
-
-                // lets call the stream like the device
-				if(!(stream->pulse_stream = pa_stream_new(c, stream->device, &sample_spec, NULL))) {
-					glc_log(pulse.glc, GLC_ERROR, "pulse", ("pa_stream_new() failed: %s\n"), pa_strerror(pa_context_errno(c)));
-		            return;
-            	}
-
-				pa_stream_set_state_callback(stream->pulse_stream, stream_state_callback, (void*)stream);
-				pa_stream_set_read_callback(stream->pulse_stream, stream_read_callback, (void*)stream);
-
-				if (pa_stream_connect_record(stream->pulse_stream, strcmp(stream->device, "default") == 0 ? NULL : stream->device, NULL, 0) < 0) {
-					glc_log(pulse.glc, GLC_ERROR, "pulse", "pa_stream_connect_record() failed: %s\n", pa_strerror(pa_context_errno(c)));
-					return;
-				}
-
-				stream = stream->next;
+        	pulse_init_streams();
+    		pulse.context_ready = 1;
+			if(pulse.capture_when_context_ready) {
+				pulse.capture_when_context_ready = 0;
+				pulse_capture_connect_all();
 			}
-			
             break;
         }
 
@@ -264,9 +272,6 @@ static void stream_state_callback(pa_stream *s, void *userdata) {
 }
 
 int pulse_start(ps_buffer_t *buffer) {
-    if(!pulse.capture)
-        return 0;
-
 	struct pulse_capture_stream_s *stream = pulse.capture_stream;
 	int ret;
 
@@ -312,19 +317,6 @@ int pulse_start(ps_buffer_t *buffer) {
 	return 0;
 }
 
-glc_audio_format_t pulse_glc_format(pa_sample_format_t pcm_fmt) {
-	switch (pcm_fmt) {
-		case PA_SAMPLE_S16LE:
-			return GLC_AUDIO_S16_LE;
-		case PA_SAMPLE_S24LE:
-			return GLC_AUDIO_S24_LE;
-		case PA_SAMPLE_S32LE:
-			return GLC_AUDIO_S32_LE;
-		default:
-			return 0;
-	}
-}
-
 int pulse_close() {
 	if (!pulse.started)
 		return 0;
@@ -346,18 +338,26 @@ int pulse_close() {
 }
 
 int pulse_capture_start_all() {
-	if (pulse.capturing)
+	if (!pulse.capture || pulse.capturing)
 		return 0;
 
-	pulse.capturing = 1;
+	if(pulse.context_ready)
+		pulse_capture_connect_all();
+	else
+		pulse.capture_when_context_ready = 1;
+
 	return 0;
 }
 
 int pulse_capture_stop_all() {
-	if (!pulse.capturing)
+	if (!pulse.capture)
 		return 0;
 
-	pulse.capturing = 0;
+	if(pulse.capture_when_context_ready)
+		pulse.capture_when_context_ready = 0;
+	if(pulse.capturing)
+		pulse_capture_disconnect_all();
+
 	return 0;
 }
 
@@ -408,6 +408,49 @@ int pulse_parse_capture_cfg(const char *cfg) {
 	}
 
 	return 0;
+}
+
+glc_audio_format_t pulse_glc_format(pa_sample_format_t pcm_fmt) {
+	switch (pcm_fmt) {
+		case PA_SAMPLE_S16LE:
+			return GLC_AUDIO_S16_LE;
+		case PA_SAMPLE_S24LE:
+			return GLC_AUDIO_S24_LE;
+		case PA_SAMPLE_S32LE:
+			return GLC_AUDIO_S32_LE;
+		default:
+			return 0;
+	}
+}
+
+void pulse_capture_connect_all() {
+	pulse.capturing = 1;
+	pa_context *c = pulse.context;
+	struct pulse_capture_stream_s *stream = pulse.capture_stream;
+
+	while(stream != NULL) {
+		if (pa_stream_connect_record(stream->pulse_stream, strcmp(stream->device, "default") == 0 ? NULL : stream->device, NULL, 0) < 0) {
+			glc_log(pulse.glc, GLC_ERROR, "pulse", "pa_stream_connect_record() failed: %s\n", pa_strerror(pa_context_errno(c)));
+			return;
+		}
+
+		stream = stream->next;
+	}
+}
+
+void pulse_capture_disconnect_all() {
+	pulse.capturing = 0;
+	pa_context *c = pulse.context;
+	struct pulse_capture_stream_s *stream = pulse.capture_stream;
+
+	while(stream != NULL) {
+		if (pa_stream_disconnect(stream->pulse_stream) < 0) {
+			glc_log(pulse.glc, GLC_ERROR, "pulse", "pa_stream_disconnect_record() failed: %s\n", pa_strerror(pa_context_errno(c)));
+			return;
+		}
+
+		stream = stream->next;
+	}
 }
 
 /**  \} */

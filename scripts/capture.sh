@@ -16,6 +16,9 @@ export GLC_SCALE=1.0
 # capture audio
 export GLC_AUDIO=1
 
+# use pulseaudio instead of alsa
+export GLC_USE_PULSEAUDIO=1
+
 # install custom signal handler
 export GLC_SIGHANDLER=0
 
@@ -67,7 +70,7 @@ export GLC_COLORSPACE=420jpeg
 
 # record alsa devices
 # format is device,rate,channels;device2...
-# export GLC_AUDIO_RECORD=default,44100,1
+# export GLC_AUDIO_DEVICES=default,44100,1
 
 # use GL_PACK_ALIGNMENT 8
 export GLC_CAPTURE_DWORD_ALIGNED=1

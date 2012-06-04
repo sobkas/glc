@@ -75,7 +75,7 @@ int alsa_init(glc_t *glc)
 
 	glc_log(alsa.glc, GLC_DEBUG, "alsa", "initializing");
 
-	if (getenv("GLC_AUDIO"))
+	if (getenv("GLC_AUDIO") && !getenv("GLC_USE_PULSEAUDIO"))
 		alsa.capture = atoi(getenv("GLC_AUDIO"));
 	else
 		alsa.capture = 1;
@@ -90,8 +90,8 @@ int alsa_init(glc_t *glc)
 			alsa_hook_allow_skip(alsa.alsa_hook, atoi(getenv("GLC_AUDIO_SKIP")));
 	}
 
-	if (getenv("GLC_AUDIO_RECORD"))
-		alsa_parse_capture_cfg(getenv("GLC_AUDIO_RECORD"));
+	if (getenv("GLC_AUDIO_DEVICES") && !getenv("GLC_USE_PULSEAUDIO"))
+		alsa_parse_capture_cfg(getenv("GLC_AUDIO_DEVICES"));
 
 	get_real_alsa();
 
