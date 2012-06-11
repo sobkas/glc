@@ -85,7 +85,7 @@ int pulse_init(glc_t *glc) {
 	else
 		pulse.capture = 1;
 
-	if (getenv("GLC_AUDIO_DEVICES") && getenv("GLC_USE_PULSEAUDIO"))
+	if (getenv("GLC_USE_PULSEAUDIO"))
 		pulse_parse_capture_cfg(getenv("GLC_AUDIO_DEVICES"));
 	
 	if(pulse.capture) {
@@ -119,12 +119,15 @@ void pulse_init_streams() {
 			.rate = stream->rate,
 			.channels = stream->channels
 		};
+		char *name = malloc(sizeof(char)*25);
+		sprintf(name, "Audio Stream #%d", stream->id);
 
-        // lets call the stream like the device
-		if(!(stream->pulse_stream = pa_stream_new(c, stream->device, &sample_spec, NULL))) {
+		if(!(stream->pulse_stream = pa_stream_new(c, name, &sample_spec, NULL))) {
 			glc_log(pulse.glc, GLC_ERROR, "pulse", ("pa_stream_new() failed: %s\n"), pa_strerror(pa_context_errno(c)));
+			free(name);
             return;
     	}
+    	free(name);
 
 		pa_stream_set_state_callback(stream->pulse_stream, stream_state_callback, (void*)stream);
 		pa_stream_set_read_callback(stream->pulse_stream, stream_read_callback, (void*)stream);
@@ -206,10 +209,8 @@ static void stream_read_callback(pa_stream *s, size_t length, void *userdata) {
 		if (delay_usec < time)
 			time -= delay_usec;
 		hdr.time = time;
-		hdr.size = stream->fragsize;// / pa_sample_size(&sample_spec);
+		hdr.size = stream->fragsize;
 		hdr.id = stream->id;
-	
-		fprintf(stderr, "time=%d, size=%d id=%d\n", (int)hdr.time, (int)hdr.size, hdr.id);
 	
 		int ret;
 		if ((ret = ps_packet_open(&(pulse.packet), PS_PACKET_WRITE)))
@@ -218,16 +219,6 @@ static void stream_read_callback(pa_stream *s, size_t length, void *userdata) {
 			goto cancel;
 		if ((ret = ps_packet_write(&(pulse.packet), &hdr, sizeof(glc_audio_data_header_t))))
 			goto cancel;
-			
-		/*
-		if ((ret = ps_packet_dma(&(pulse.packet), (void *) &dma, hdr.size, PS_ACCEPT_FAKE_DMA)))
-			goto cancel;
-
-		if ((read = snd_pcm_readi(alsa_capture->pcm, dma, alsa_capture->period_size)) < 0)
-			read = -alsa_capture_xrun(alsa_capture, read);
-		*/
-
-		fprintf(stderr, "buffer size %d; write %d bytes\n", (int)stream->buffer_length, stream->fragsize);
 
 		if ((ret = ps_packet_write(&(pulse.packet), stream->buffer, stream->fragsize)))
 			goto cancel;
@@ -334,6 +325,16 @@ int pulse_close() {
 
 	ps_packet_destroy(&pulse.packet);
 
+	struct pulse_capture_stream_s *del;
+
+	while(pulse.capture_stream != NULL) {
+		del = pulse.capture_stream;
+		pulse.capture_stream = pulse.capture_stream->next;
+		if(del->device)
+			free(del->device);
+		free(del);
+	}
+
 	return 0;
 }
 
@@ -366,6 +367,24 @@ int pulse_parse_capture_cfg(const char *cfg) {
 	const char *args, *next, *device = cfg;
 	unsigned int channels, rate;
 	size_t len;
+
+	if(device == NULL) {
+		stream = malloc(sizeof(struct pulse_capture_stream_s));
+		memset(stream, 0, sizeof(struct pulse_capture_stream_s));
+
+		stream->device = NULL;
+
+		stream->buffer_length = stream->buffer_index = stream->fragsize = 0;
+		stream->buffer = NULL;
+		stream->channels = 2;
+		stream->rate = 44100;
+		stream->format = PA_SAMPLE_S16LE;
+		stream->next = pulse.capture_stream;
+		glc_state_audio_new(pulse.glc, &(stream->id), &(stream->state_audio));
+		pulse.capture_stream = stream;
+
+		glc_log(pulse.glc, GLC_DEBUG, "pulse", "device %s\n", stream->device);
+	}
 
 	while (device != NULL) {
 		while (*device == ';')
@@ -404,6 +423,8 @@ int pulse_parse_capture_cfg(const char *cfg) {
 		glc_state_audio_new(pulse.glc, &(stream->id), &(stream->state_audio));
 		pulse.capture_stream = stream;
 
+		glc_log(pulse.glc, GLC_DEBUG, "pulse", "device %s\n", stream->device);
+
 		device = next;
 	}
 
@@ -429,7 +450,7 @@ void pulse_capture_connect_all() {
 	struct pulse_capture_stream_s *stream = pulse.capture_stream;
 
 	while(stream != NULL) {
-		if (pa_stream_connect_record(stream->pulse_stream, strcmp(stream->device, "default") == 0 ? NULL : stream->device, NULL, 0) < 0) {
+		if (pa_stream_connect_record(stream->pulse_stream, stream->device, NULL, 0) < 0) {
 			glc_log(pulse.glc, GLC_ERROR, "pulse", "pa_stream_connect_record() failed: %s\n", pa_strerror(pa_context_errno(c)));
 			return;
 		}
