@@ -90,6 +90,8 @@ __PRIVATE int opengl_push_message(glc_message_header_t *hdr, void *message, size
  */
 __PRIVATE int x11_init(glc_t *glc);
 __PRIVATE int x11_close();
+__PRIVATE int x11_input_capture_start();
+__PRIVATE int x11_input_capture_stop();
 /**  \} */
 
 /**

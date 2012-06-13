@@ -23,11 +23,14 @@
 #include <glc/common/log.h>
 #include <glc/common/state.h>
 #include <glc/common/util.h>
+#include <glc/capture/input_capture.h>
 
 #include "lib.h"
 
 struct x11_private_s {
 	glc_t *glc;
+
+	input_capture_t input_capture;
 
 	void *libX11_handle;
 	int (*XNextEvent)(Display *, XEvent *);
@@ -72,6 +75,8 @@ int x11_init(glc_t *glc)
 	x11.glc = glc;
 
 	get_real_x11();
+
+	input_capture_init(&x11.input_capture, glc);
 
 	if (getenv("GLC_HOTKEY")) {
 		if (x11_parse_key(getenv("GLC_HOTKEY"), &x11.capture_key, &x11.capture_key_mask)) {
@@ -134,6 +139,7 @@ int x11_parse_key(const char *str, KeySym *key, unsigned int *mask)
 
 int x11_close()
 {
+	input_capture_destroy(x11.input_capture);
 	return 0;
 }
 
@@ -177,6 +183,17 @@ void x11_event(Display *dpy, XEvent *event)
 
 		x11.last_event_time = event->xkey.time;
 	}
+
+	if(input_capture_event(x11.input_capture, dpy, event))
+		glc_log(x11.glc, GLC_WARNING, "x11", "cannot capture input");
+}
+
+int x11_input_capture_start() {
+	input_capture_start(x11.input_capture);
+}
+
+int x11_input_capture_stop() {
+	input_capture_stop(x11.input_capture);
 }
 
 void get_real_x11()

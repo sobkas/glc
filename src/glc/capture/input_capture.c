@@ -1,0 +1,117 @@
+/**
+ * \file glc/capture/input_capture.c
+ * \brief input capture from x11
+ * \author Sebastian Wick <wick.sebastian@gmail.com>
+ * \date 2012-2012
+ * For conditions of distribution and use, see copyright notice in glc.h
+ */
+
+/**
+ * \addtogroup input_capture
+ *  \{
+ */
+
+#include <stdlib.h>
+#include <string.h>
+
+#include <glc/common/glc.h>
+#include <glc/common/log.h>
+
+#include "input_capture.h"
+
+struct input_event {
+	Display *dyp;
+	XEvent *event;
+};
+
+struct input_capture_s {
+	glc_t *glc;
+	ps_buffer_t *to;
+	glc_stream_id_t id;
+
+	int capture;
+};
+
+int input_capture_init(input_capture_t *input_capture, glc_t *glc) {
+	*input_capture = (input_capture_t) malloc(sizeof(struct input_capture_s));
+	memset(*input_capture, 0, sizeof(struct input_capture_s));
+
+	(*input_capture)->glc = glc;
+	(*input_capture)->capture = 0;
+
+	glc_log((*input_capture)->glc, GLC_INFORMATION, "input_capture", "init");
+
+	return 0;
+}
+
+int input_capture_start(input_capture_t input_capture) {
+	if(input_capture->capture)
+		glc_log(input_capture->glc, GLC_WARNING, "input_capture", "already started");
+	else
+		glc_log(input_capture->glc, GLC_INFORMATION, "input_capture", "starting");
+
+	input_capture->capture = 1;
+	return 0;
+}
+
+int input_capture_stop(input_capture_t input_capture) {
+	if(!input_capture->capture)
+		glc_log(input_capture->glc, GLC_WARNING, "input_capture", "already stopped");
+	else
+		glc_log(input_capture->glc, GLC_INFORMATION, "input_capture", "stopping");
+
+	input_capture->capture = 0;
+	return 0;
+}
+
+int input_capture_destroy(input_capture_t input_capture) {
+	free(input_capture);
+	return 0;
+}
+
+int input_capture_event(input_capture_t input_capture, Display *dpy, XEvent *event) {
+	if(!input_capture->capture)
+		return 0;
+
+	char *serialized = (char*) malloc(sizeof(char)*1024); // TODO: do some dynamic stuff here
+	if(!input_capture_event_to_string(event, serialized)) {
+		// TODO: fancy packetstream stuff
+
+		free(serialized);
+	}
+
+	return 0;
+}
+
+int input_capture_event_to_string(XEvent *event, char *serialized) {
+	switch(event->type) {
+		case KeyPress: {
+			XKeyPressedEvent *e = (XKeyPressedEvent*)event;
+			sprintf(serialized, "kp %lu %d %d %u %u", e->time /* unsigned long */, e->x, e->y, e->state, e->keycode);
+			return 0;
+		}
+		case KeyRelease: {
+			XKeyReleasedEvent *e = (XKeyReleasedEvent*)event;
+			sprintf(serialized, "kr %lu %d %d %u %u", e->time /* unsigned long */, e->x, e->y, e->state, e->keycode);
+			return 0;
+		}
+		case ButtonPress: {
+			XButtonPressedEvent *e = (XButtonPressedEvent*)event;
+			sprintf(serialized, "bp %lu %d %d %u %u", e->time /* unsigned long */, e->x, e->y, e->state, e->button);
+			return 0;
+		}
+		case ButtonRelease: {
+			XButtonPressedEvent *e = (XButtonReleasedEvent*)event;
+			sprintf(serialized, "br %lu %d %d %u %u", e->time /* unsigned long */, e->x, e->y, e->state, e->button);
+			return 0;
+		}
+		case MotionNotify: {
+			XMotionEvent *e = (XMotionEvent*)event;
+			sprintf(serialized, "mf %lu %d %d %u ", e->time /* unsigned long */, e->x, e->y, e->state/*, e->is_hint /* char */);
+			return 0;
+		}
+	}
+	return 1;
+}
+ 
+/**  \} */

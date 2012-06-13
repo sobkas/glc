@@ -272,6 +272,8 @@ int start_capture()
 		goto err;
 	if ((ret = opengl_capture_start()))
 		goto err;
+	if ((ret = x11_input_capture_start()))
+	    goto err;
 
 	glc_state_time_add_diff(&mpriv.glc, glc_state_time(&mpriv.glc) - mpriv.stop_time);
 	lib.flags |= LIB_CAPTURING;
@@ -295,6 +297,8 @@ int stop_capture()
 		goto err;
 	if ((ret = opengl_capture_stop()))
 		goto err;
+	if ((ret = x11_input_capture_stop()))
+	    goto err;
 
 	lib.flags &= ~LIB_CAPTURING;
 	mpriv.stop_time = glc_state_time(&mpriv.glc);
