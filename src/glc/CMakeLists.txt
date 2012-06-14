@@ -74,9 +74,11 @@ SET(PLAY_SRC play/alsa_play.c
 
 SET(EXPORT_HDR export/img.h
 	       export/wav.h
-	       export/yuv4mpeg.h)
+	       export/yuv4mpeg.h
+	       export/input.h)
 SET(EXPORT_SRC export/img.c
 	       export/wav.c
+	       export/input.c
 	       export/yuv4mpeg.c)
 
 SET(QUICKLZ_SRC)

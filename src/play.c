@@ -30,10 +30,11 @@
 #include <glc/export/img.h>
 #include <glc/export/wav.h>
 #include <glc/export/yuv4mpeg.h>
+#include <glc/export/input.h>
 
 #include <glc/play/demux.h>
 
-enum play_action {action_play, action_info, action_img, action_yuv4mpeg, action_wav, action_val};
+enum play_action {action_play, action_info, action_img, action_yuv4mpeg, action_wav, action_input, action_val};
 
 struct play_s {
 	glc_t glc;
@@ -61,6 +62,7 @@ struct play_s {
 	const char *export_filename_format;
 	glc_stream_id_t export_video_id;
 	glc_stream_id_t export_audio_id;
+	glc_stream_id_t export_input_id;
 	int img_format;
 
 	glc_utime_t silence_threshold;
@@ -75,6 +77,7 @@ int play_stream(struct play_s *play);
 int stream_info(struct play_s *play);
 int export_img(struct play_s *play);
 int export_yuv4mpeg(struct play_s *play);
+int export_input(struct play_s *play);
 int export_wav(struct play_s *play);
 
 int main(int argc, char *argv[])
@@ -90,6 +93,7 @@ int main(int argc, char *argv[])
 		{"bmp",			1, NULL, 'b'},
 		{"png",			1, NULL, 'p'},
 		{"yuv4mpeg",		1, NULL, 'y'},
+		{"input",		1, NULL, 'n'},
 		{"out",			1, NULL, 'o'},
 		{"fps",			1, NULL, 'f'},
 		{"resize",		1, NULL, 'r'},
@@ -136,7 +140,7 @@ int main(int argc, char *argv[])
 	play.green_gamma = 1.0;
 	play.blue_gamma = 1.0;
 
-	while ((opt = getopt_long(argc, argv, "i:a:b:p:y:o:f:r:g:l:td:c:u:s:v:hV",
+	while ((opt = getopt_long(argc, argv, "i:a:b:p:y:n:o:f:r:g:l:td:c:u:s:v:hV",
 				  long_options, &optind)) != -1) {
 		switch (opt) {
 		case 'i':
@@ -164,6 +168,12 @@ int main(int argc, char *argv[])
 			if (play.export_video_id < 1)
 				goto usage;
 			play.action = action_yuv4mpeg;
+			break;
+		case 'n':
+			play.export_input_id = atoi(optarg);
+			if(play.export_input_id < 1)
+				goto usage;
+			play.action = action_input;
 			break;
 		case 'f':
 			play.fps = atof(optarg);
@@ -238,7 +248,8 @@ int main(int argc, char *argv[])
 	/* same goes to output file */
 	if (((play.action == action_img) |
 	     (play.action == action_wav) |
-	     (play.action == action_yuv4mpeg)) &&
+	     (play.action == action_yuv4mpeg) |
+	     (play.action == action_input)) &&
 	    (play.export_filename_format == NULL))
 		goto usage;
 
@@ -278,6 +289,10 @@ int main(int argc, char *argv[])
 		if (export_yuv4mpeg(&play))
 			return EXIT_FAILURE;
 		break;
+	case action_input:
+		if (export_input(&play))
+			return EXIT_FAILURE;
+		break;
 	case action_img:
 		if (export_img(&play))
 			return EXIT_FAILURE;
@@ -313,6 +328,7 @@ usage:
 	       "                             (use -o pic-%%010d.bmp f.ex.)\n"
 	       "  -p, --png=NUM            save frames from stream NUM as png files\n"
 	       "  -y, --yuv4mpeg=NUM       save video stream NUM in yuv4mpeg format\n"
+	       "  -n, --input=NUM          save input stream NUM in file\n"
 	       "  -o, --out=FILE           write to FILE\n"
 	       "  -f, --fps=FPS            save images or video at FPS\n"
 	       "  -r, --resize=VAL         resize pictures with scale factor VAL or WxH\n"
@@ -788,6 +804,77 @@ int export_yuv4mpeg(struct play_s *play)
 err:
 	fprintf(stderr, "exporting yuv4mpeg failed: %s (%d)\n", strerror(ret), ret);
 	return ret;
+}
+
+int export_input(struct play_s *play) {
+	/*
+	 Export input uses following pipeline:
+
+	 file -(uncompressed_buffer)->     reads data from stream file
+	 unpack -(uncompressed_buffer)->   decompresses lzo/quicklz packets
+	 input -(rgb)->                    write inputs to file
+	*/
+
+	ps_bufferattr_t attr;
+	ps_buffer_t uncompressed_buffer, compressed_buffer;
+	input_t input;
+	unpack_t unpack;
+	int ret = 0;
+
+	if ((ret = ps_bufferattr_init(&attr)))
+		goto err;
+
+	/* buffers */
+	if ((ret = ps_bufferattr_setsize(&attr, play->compressed_size)))
+		goto err;
+	if ((ret = ps_buffer_init(&compressed_buffer, &attr)))
+		goto err;
+
+	if ((ret = ps_bufferattr_setsize(&attr, play->uncompressed_size)))
+		goto err;
+	if ((ret = ps_buffer_init(&uncompressed_buffer, &attr)))
+		goto err;
+
+	if ((ret = ps_bufferattr_destroy(&attr)))
+		goto err;
+
+	/* init filters */
+	if ((ret = unpack_init(&unpack, &play->glc)))
+		goto err;
+	if ((ret = input_init(&input, &play->glc)))
+		goto err;
+	input_set_filename(input, play->export_filename_format);
+	input_set_stream_id(input, play->export_input_id);
+
+	/* start the threads */
+	if ((ret = unpack_process_start(unpack, &compressed_buffer, &uncompressed_buffer)))
+		goto err;
+	if ((ret = input_process_start(input, &uncompressed_buffer)))
+		goto err;
+	if ((ret = file_read(play->file, &compressed_buffer)))
+		goto err;
+
+	/* wait and clean up */
+	if ((ret = input_process_wait(input)))
+		goto err;
+	if ((ret = unpack_process_wait(unpack)))
+		goto err;
+
+	unpack_destroy(unpack);
+	input_destroy(input);
+
+	ps_buffer_destroy(&compressed_buffer);
+	ps_buffer_destroy(&uncompressed_buffer);
+
+	return 0;
+err:
+	if (!ret) {
+		fprintf(stderr, "exporting input failed: initializing filters failed\n");
+		return EAGAIN;
+	} else {
+		fprintf(stderr, "exporting input failed: %s (%d)\n", strerror(ret), ret);
+		return ret;
+	}
 }
 
 int export_wav(struct play_s *play)
