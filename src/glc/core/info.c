@@ -27,6 +27,7 @@
 
 #define INFO_DETAILED_VIDEO           2
 #define INFO_DETAILED_AUDIO_FORMAT  2
+#define INFO_INPUT                  1
 #define INFO_FPS                    3
 #define INFO_AUDIO                  4
 #define INFO_AUDIO_DETAILED         5
@@ -81,6 +82,7 @@ void video_format_info(info_t info, glc_video_format_message_t *video_message);
 void video_frame_info(info_t info, glc_video_frame_header_t *pic_header);
 void audio_format_info(info_t info, glc_audio_format_message_t *fmt_message);
 void audio_data_info(info_t info, glc_audio_data_header_t *audio_header);
+void input_data_info(info_t info, glc_input_data_header_t *input_header);
 void color_info(info_t info, glc_color_message_t *color_msg);
 
 void print_time(FILE *stream, glc_utime_t time);
@@ -209,6 +211,8 @@ int info_read_callback(glc_thread_state_t *state)
 		audio_data_info(info, (glc_audio_data_header_t *) state->read_data);
 	else if (state->header.type == GLC_MESSAGE_COLOR)
 		color_info(info, (glc_color_message_t *) state->read_data);
+	else if (state->header.type == GLC_MESSAGE_INPUT_DATA)
+		input_data_info(info, (glc_input_data_header_t *) state->read_data);
 	else if (state->header.type == GLC_MESSAGE_CLOSE) {
 		print_time(info->stream, info->time);
 		fprintf(info->stream, "end of stream\n");
@@ -408,6 +412,24 @@ void audio_data_info(info_t info, glc_audio_data_header_t *audio_header)
 	} else if (info->level >= INFO_AUDIO) {
 		print_time(info->stream, info->time);
 		fprintf(info->stream, "audio packet (stream %d)\n", audio_header->id);
+	}
+}
+
+void input_data_info(info_t info, glc_input_data_header_t *input_header)
+{
+	info->time = input_header->time;
+	struct info_audio_stream_s *audio;
+
+	if (info->level >= INFO_INPUT) {
+		print_time(info->stream, info->time);
+		fprintf(info->stream, "input packet\n");
+		fprintf(info->stream, "  stream id   = %d\n", input_header->id);
+		fprintf(info->stream, "  time        = %lu\n", input_header->time);
+		fprintf(info->stream, "  size        = %ld\n", input_header->size);
+	}
+	else {
+		print_time(info->stream, info->time);
+		fprintf(info->stream, "input packet (stream %d)\n", input_header->id);
 	}
 }
 
