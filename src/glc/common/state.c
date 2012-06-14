@@ -33,6 +33,12 @@ struct glc_state_audio_s {
 	struct glc_state_audio_s *next;
 };
 
+struct glc_state_input_s {
+	glc_stream_id_t id;
+
+	struct glc_state_input_s *next;
+};
+
 struct glc_state_s {
 	pthread_rwlock_t state_rwlock;
 
@@ -46,6 +52,10 @@ struct glc_state_s {
 	pthread_rwlock_t audio_rwlock;
 	struct glc_state_audio_s *audio;
 	glc_stream_id_t audio_count;
+
+	pthread_rwlock_t input_rwlock;
+	struct glc_state_input_s *input;
+	glc_stream_id_t input_count;
 };
 
 int glc_state_init(glc_t *glc)
@@ -123,6 +133,22 @@ int glc_state_audio_new(glc_t *glc, glc_stream_id_t *id,
 	pthread_rwlock_unlock(&glc->state->audio_rwlock);
 
 	*id = (*audio)->id;
+	return 0;
+}
+
+int glc_state_input_new(glc_t *glc, glc_stream_id_t *id,
+			glc_state_input_t *input)
+{
+	*input = (glc_state_input_t) malloc(sizeof(struct glc_state_input_s));
+	memset(*input, 0, sizeof(struct glc_state_input_s));
+
+	pthread_rwlock_wrlock(&glc->state->input_rwlock);
+	(*input)->id = ++glc->state->input_count;
+	(*input)->next = glc->state->input;
+	glc->state->input = *input;
+	pthread_rwlock_unlock(&glc->state->input_rwlock);
+
+	*id = (*input)->id;
 	return 0;
 }
 

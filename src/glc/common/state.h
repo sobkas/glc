@@ -36,6 +36,11 @@ typedef struct glc_state_video_s* glc_state_video_t;
 typedef struct glc_state_audio_s* glc_state_audio_t;
 
 /**
+ * \brief input stream object
+ */
+typedef struct glc_state_input_s* glc_state_input_t;
+
+/**
  * \brief initialize state
  * \param glc glc
  * \return 0 on success otherwise an error code
@@ -68,6 +73,16 @@ __PUBLIC int glc_state_video_new(glc_t *glc, glc_stream_id_t *id,
  */
 __PUBLIC int glc_state_audio_new(glc_t *glc, glc_stream_id_t *id,
 				 glc_state_audio_t *audio);
+
+/**
+ * \brief acquire a new input stream
+ * \param glc glc
+ * \param id returned input stream identifier
+ * \param input returned input stream object
+ * \return 0 on success otherwise an error code
+ */
+__PUBLIC int glc_state_input_new(glc_t *glc, glc_stream_id_t *id,
+				 glc_state_input_t *input);
 
 /**
  * \brief set state flag

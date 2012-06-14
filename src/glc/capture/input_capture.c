@@ -16,6 +16,7 @@
 
 #include <glc/common/glc.h>
 #include <glc/common/log.h>
+#include <glc/common/state.h>
 
 #include "input_capture.h"
 
@@ -28,6 +29,7 @@ struct input_capture_s {
 	glc_t *glc;
 	ps_buffer_t *to;
 	glc_stream_id_t id;
+	glc_state_input_t state_input;
 
 	int capture;
 };
@@ -38,6 +40,8 @@ int input_capture_init(input_capture_t *input_capture, glc_t *glc) {
 
 	(*input_capture)->glc = glc;
 	(*input_capture)->capture = 0;
+	glc_state_input_new((*input_capture)->glc, &(*input_capture)->id,
+			    &(*input_capture)->state_input);
 
 	glc_log((*input_capture)->glc, GLC_INFORMATION, "input_capture", "init");
 
@@ -45,6 +49,9 @@ int input_capture_init(input_capture_t *input_capture, glc_t *glc) {
 }
 
 int input_capture_start(input_capture_t input_capture) {
+	if(input_capture->to == NULL)
+		return EAGAIN;
+
 	if(input_capture->capture)
 		glc_log(input_capture->glc, GLC_WARNING, "input_capture", "already started");
 	else
@@ -66,6 +73,11 @@ int input_capture_stop(input_capture_t input_capture) {
 
 int input_capture_destroy(input_capture_t input_capture) {
 	free(input_capture);
+	return 0;
+}
+
+int input_capture_set_buffer(input_capture_t input_capture, ps_buffer_t *buffer) {
+	input_capture->to = buffer;
 	return 0;
 }
 

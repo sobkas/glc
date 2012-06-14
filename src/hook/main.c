@@ -358,6 +358,8 @@ int start_glc()
 		return ret;
 	if ((ret = opengl_start(mpriv.uncompressed)))
 		return ret;
+	if ((ret = x11_input_start(mpriv.uncompressed)))
+		return ret;
 
 	lib.running = 1;
 	glc_log(&mpriv.glc, GLC_INFORMATION, "main", "glc running");
@@ -411,6 +413,8 @@ void lib_close()
 	if ((ret = alsa_close()))
 		goto err;
 	if ((ret = opengl_close()))
+		goto err;
+	if ((ret = x11_input_close()))
 		goto err;
 
 	if (lib.running) {

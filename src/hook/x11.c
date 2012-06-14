@@ -31,6 +31,7 @@ struct x11_private_s {
 	glc_t *glc;
 
 	input_capture_t input_capture;
+	int input_started;
 
 	void *libX11_handle;
 	int (*XNextEvent)(Display *, XEvent *);
@@ -186,6 +187,20 @@ void x11_event(Display *dpy, XEvent *event)
 
 	if(input_capture_event(x11.input_capture, dpy, event))
 		glc_log(x11.glc, GLC_WARNING, "x11", "cannot capture input");
+}
+
+int x11_input_start(ps_buffer_t *buffer) {
+	if (x11.input_started)
+		return EINVAL;
+
+	input_capture_set_buffer(x11.input_capture, buffer);
+
+	x11.input_started = 1;
+	return 0;
+}
+
+int x11_input_close() {
+	return 0;
 }
 
 int x11_input_capture_start() {

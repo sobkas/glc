@@ -68,6 +68,14 @@ __PUBLIC int input_capture_destroy(input_capture_t input_capture);
 
 
 /**
+ * \brief set input capture buffer
+ * \param buffer ps_buffer_t object
+ * \return 0 on success otherwise an error code
+ */
+__PUBLIC int input_capture_set_buffer(input_capture_t input_capture, ps_buffer_t *buffer);
+
+
+/**
  * \brief event to capture
  * \param input_capture input_capture object
  * \param Display X Display object
