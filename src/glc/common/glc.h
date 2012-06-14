@@ -190,6 +190,8 @@ typedef u_int8_t glc_message_type_t;
 #define GLC_MESSAGE_LZJB               0x0a
 /** callback request */
 #define GLC_CALLBACK_REQUEST           0x0b
+/** input data message */
+#define GLC_MESSAGE_INPUT_DATA         0x0c
 
 /**
  * \brief stream message header
@@ -336,6 +338,18 @@ typedef struct {
 	/** header */
 	glc_message_header_t header;
 } __attribute__((packed)) glc_container_message_header_t;
+
+/**
+ * \brief input data message header
+ */
+typedef struct {
+	/** stream identifier */
+	glc_stream_id_t id;
+	/** time */
+	glc_utime_t time;
+	/** data size in bytes */
+	glc_size_t size;
+} __attribute__((packed)) glc_input_data_header_t;
 
 /**
  * \brief callback request

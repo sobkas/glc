@@ -85,12 +85,44 @@ int input_capture_event(input_capture_t input_capture, Display *dpy, XEvent *eve
 	if(!input_capture->capture)
 		return 0;
 
-	char *serialized = (char*) malloc(sizeof(char)*1024); // TODO: do some dynamic stuff here
-	if(!input_capture_event_to_string(event, serialized)) {
-		// TODO: fancy packetstream stuff
+	char *serialized;
+	glc_input_data_header_t hdr;
+	glc_message_header_t msg_hdr;
+	ps_packet_t packet;
 
-		free(serialized);
-	}
+	ps_packet_init(&packet, input_capture->to);
+	msg_hdr.type = GLC_MESSAGE_INPUT_DATA;
+
+	hdr.time = glc_state_time(alsa_capture->glc);
+	hdr.size = sizeof(char)*1024;
+	hdr.id = input_capture->id;
+
+	serialized = (char*) malloc(hdr.size);
+	if (!(ret = input_capture_event_to_string(event, serialized)))
+		goto cancel;
+	hdr.size = strlen(serialized);
+
+	if ((ret = ps_packet_open(&packet, PS_PACKET_WRITE)))
+		goto cancel;
+	if ((ret = ps_packet_write(&packet, &msg_hdr, sizeof(glc_message_header_t))))
+		goto cancel;
+	if ((ret = ps_packet_write(&packet, &hdr, sizeof(glc_input_data_header_t))))
+		goto cancel;
+	if ((ret = ps_packet_write(&packet, serialized, hdr.size)))
+		goto cancel;
+	if ((ret = ps_packet_close(&packet)))
+		goto cancel;
+
+
+	ps_packet_destroy(&packet);
+
+cancel:
+	glc_log(input_capture->glc, GLC_ERROR, "input_capture", "%s (%d)", strerror(ret), ret);
+	if (ret == EINTR)
+		break;
+	if (ps_packet_cancel(&packet))
+		break;
+	free(serialized);
 
 	return 0;
 }
