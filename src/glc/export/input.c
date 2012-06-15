@@ -26,14 +26,6 @@
 
 #include "input.h"
 
-/*input_t
-input_init
-input_set_filename
-input_set_stream_id
-input_process_start
-input_process_wait
-input_destroy*/
-
 struct input_s {
 	glc_t *glc;
 	glc_thread_t thread;
@@ -154,10 +146,6 @@ int input_read_callback(glc_thread_state_t *state)
 
 int input_write(input_t input, glc_input_data_header_t *input_hdr, char *data)
 {
-	size_t need_silence, write_silence;
-	unsigned int c;
-	size_t samples, s;
-
 	if (input_hdr->id != input->id)
 		return 0;
 

@@ -418,7 +418,6 @@ void audio_data_info(info_t info, glc_audio_data_header_t *audio_header)
 void input_data_info(info_t info, glc_input_data_header_t *input_header)
 {
 	info->time = input_header->time;
-	struct info_audio_stream_s *audio;
 
 	if (info->level >= INFO_INPUT) {
 		print_time(info->stream, info->time);

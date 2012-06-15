@@ -38,6 +38,8 @@ struct input_capture_s {
 	int capture;
 };
 
+int input_capture_event_to_string(XEvent *event, char *serialized);
+
 int input_capture_init(input_capture_t *input_capture, glc_t *glc) {
 	*input_capture = (input_capture_t) malloc(sizeof(struct input_capture_s));
 	memset(*input_capture, 0, sizeof(struct input_capture_s));
@@ -146,7 +148,7 @@ int input_capture_event_to_string(XEvent *event, char *serialized) {
 		}
 		case MotionNotify: {
 			XMotionEvent *e = (XMotionEvent*)event;
-			sprintf(serialized, "mf %lu %d %d %u ", e->time /* unsigned long */, e->x, e->y, e->state/*, e->is_hint /* char */);
+			sprintf(serialized, "mf %lu %d %d %u ", e->time /* unsigned long */, e->x, e->y, e->state/*, e->is_hint *//* char */);
 			return 0;
 		}
 	}

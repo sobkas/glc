@@ -204,11 +204,11 @@ int x11_input_close() {
 }
 
 int x11_input_capture_start() {
-	input_capture_start(x11.input_capture);
+	return input_capture_start(x11.input_capture);
 }
 
 int x11_input_capture_stop() {
-	input_capture_stop(x11.input_capture);
+	return input_capture_stop(x11.input_capture);
 }
 
 void get_real_x11()
