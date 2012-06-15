@@ -123,6 +123,8 @@ void *glc_thread(void *argptr)
 	struct glc_thread_private_s *private = (struct glc_thread_private_s *) argptr;
 	glc_thread_t *thread = private->thread;
 	glc_thread_state_t state;
+	state.header.type = 0;
+	state.threadptr = NULL;
 
 	ps_packet_t read, write;
 
