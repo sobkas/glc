@@ -193,8 +193,8 @@ void gl_play_finish_callback(void *ptr, int err)
 
 int gl_play_draw_video_frame_messageture(gl_play_t gl_play, char *from)
 {
-	unsigned int width_r = gl_play->w;
-	unsigned int height_r = gl_play->h;
+	unsigned int width_r;
+	unsigned int height_r;
 	unsigned int tile_w, tile_h;
 	unsigned int c = 0;
 
@@ -419,6 +419,9 @@ int gl_play_create_textures(gl_play_t gl_play)
 
 	gl_play->tiles_x = 0;
 	gl_play->tiles_y = 0;
+
+	if(height_r < 0 || width_r < 0)
+		return 1;
 
 	while (height_r > 0) {
 		height_r -= gl_play_next_texture_size(gl_play, height_r);
