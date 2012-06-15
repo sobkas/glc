@@ -103,6 +103,7 @@ int input_capture_event(input_capture_t input_capture, Display *dpy, XEvent *eve
 	hdr.id = input_capture->id;
 
 	serialized = (char*) malloc(hdr.size);
+	memset(serialized, 0, hdr.size);
 	if (!(ret = input_capture_event_to_string(event, serialized)))
 		return ret;
 	hdr.size = strlen(serialized);
