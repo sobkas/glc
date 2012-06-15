@@ -76,7 +76,6 @@ int pulse_init(glc_t *glc) {
 	pulse.glc = glc;
 	pulse.started = pulse.capturing = 0;
 	pulse.capture_stream = NULL;
-	int ret = 0;
 
 	glc_log(pulse.glc, GLC_DEBUG, "pulse", "initializing");
 
@@ -259,12 +258,13 @@ static void stream_state_callback(pa_stream *s, void *userdata) {
 	        stream->fragsize = attr->fragsize;
 	        break;
         }
+        default:
+            break;
 	}
 }
 
 int pulse_start(ps_buffer_t *buffer) {
 	struct pulse_capture_stream_s *stream = pulse.capture_stream;
-	int ret;
 
 	if (pulse.started)
 		return EINVAL;
