@@ -420,7 +420,7 @@ int gl_play_create_textures(gl_play_t gl_play)
 	gl_play->tiles_x = 0;
 	gl_play->tiles_y = 0;
 
-	if(height_r < 0 || width_r < 0)
+	if(height_r <= 0 || width_r <= 0)
 		return 1;
 
 	while (height_r > 0) {
