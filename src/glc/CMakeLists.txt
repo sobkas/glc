@@ -100,11 +100,16 @@ ENDIF (QUICKLZ)
 
 IF (LZO)
   ADD_DEFINITIONS(-D__MINILZO)
-  INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/support/minilzo)
-  SET(LZO_SRC ${PROJECT_SOURCE_DIR}/support/minilzo/minilzo.c
-  	      ${PROJECT_SOURCE_DIR}/support/minilzo/lzoconf.h
-  	      ${PROJECT_SOURCE_DIR}/support/minilzo/lzodefs.h
-  	      ${PROJECT_SOURCE_DIR}/support/minilzo/minilzo.h)
+#  INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/support/minilzo)
+#  SET(LZO_SRC ${PROJECT_SOURCE_DIR}/support/minilzo/minilzo.c
+#  	      ${PROJECT_SOURCE_DIR}/support/minilzo/lzoconf.h
+#  	      ${PROJECT_SOURCE_DIR}/support/minilzo/lzodefs.h
+#  	      ${PROJECT_SOURCE_DIR}/support/minilzo/minilzo.h)
+  INCLUDE_DIRECTORIES(/usr/share/lzo/minilzo)
+  SET(LZO_SRC /usr/share/lzo/minilzo/minilzo.c
+  	      /usr/share/lzo/minilzo/lzoconf.h
+  	      /usr/share/lzo/minilzo/lzodefs.h
+  	      /usr/share/lzo/minilzo/minilzo.h)
 ENDIF (LZO)
 
 IF (LZJB)

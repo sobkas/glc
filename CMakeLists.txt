@@ -6,7 +6,7 @@ PROJECT(glc)
 SET(GLC_SOVER 0)
 SET(GLC_VER 0.5.8)
 
-SET(CMAKE_C_FLAGS "-Wall")
+SET(CMAKE_C_FLAGS "-Wall -Werror")
 
 IF (NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "Release")
@@ -14,13 +14,13 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 
 OPTION(QUICKLZ
        "QuickLZ support"
-       ON)
+       OFF)
 OPTION(LZO
        "LZO support"
        ON)
 OPTION(LZJB
        "LZJB support"
-       ON)
+       OFF)
 OPTION(BINARIES
        "Build and install glc-capture and glc-play"
        ON)
