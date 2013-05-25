@@ -1,3 +1,9 @@
+glc (0.5.8-2) UNRELEASED; urgency=low
+
+  * Multi-arch fix
+
+ -- Krzysztof Sobiecki <sobkas@gmail.com>  Sun, 26 May 2013 00:52:02 +0200
+
 glc (0.5.8-1~ppa1) precise; urgency=low
 
   * Initial release to PPA
