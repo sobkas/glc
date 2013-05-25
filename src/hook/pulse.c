@@ -173,6 +173,11 @@ static void stream_read_callback(pa_stream *s, size_t length, void *userdata) {
 		glc_log(pulse.glc, GLC_ERROR, "pulse", "pa_stream_peek() failed: %s\n", pa_strerror(pa_context_errno(pulse.context)));
         return;
     }
+    
+    if (!data) {
+        pa_stream_drop (s);
+	return;
+    }
 
     if(stream->buffer) {
         stream->buffer = pa_xrealloc(stream->buffer, stream->buffer_length + length);
