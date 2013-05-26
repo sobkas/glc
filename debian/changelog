@@ -1,6 +1,7 @@
 glc (0.5.8-2) UNRELEASED; urgency=low
 
   * Multi-arch fix
+  * Fix depedency on libglc-capture-dev, make glc _really_ work on multiarch systems.
 
  -- Krzysztof Sobiecki <sobkas@gmail.com>  Sun, 26 May 2013 00:52:02 +0200
 

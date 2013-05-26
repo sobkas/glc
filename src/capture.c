@@ -38,8 +38,8 @@ int main(int argc, char *argv[])
 
 	char *program = NULL;
 	char **program_args = NULL;
-	const char *library = "libglc-hook.so";
-	const char *core_library = "libglc-core.so";
+	const char *library = "libglc-hook.so.0";
+	const char *core_library = "libglc-core.so.0";
 	const char *(*glc_version)();
 
 	struct glc_opt_s options[] = {
