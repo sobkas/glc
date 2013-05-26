@@ -9,7 +9,8 @@ Build-Depends: cmake, dh-exec (>= 0.3),
                liblzo2-dev,
                libpacketstream-dev,
                libpng12-dev,
-               libxxf86vm-dev
+               libxxf86vm-dev,
+	       libpulse-dev
 Standards-Version: 3.9.2
 Section: video
 Homepage: https://github.com/nullkey/glc
