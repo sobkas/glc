@@ -158,6 +158,33 @@ void init_glc()
 
 	glc_log(&mpriv.glc, GLC_INFORMATION, "main", "glc initialized");
 	glc_log(&mpriv.glc, GLC_DEBUG, "main", "LD_PRELOAD=%s", getenv("LD_PRELOAD"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_FILE=%s", getenv("GLC_FILE"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_FPS=%s", getenv("GLC_FPS"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_SCALE=%s", getenv("GLC_SCALE"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_CROP=%s", getenv("GLC_CROP"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_AUDIO_RECORD=%s", getenv("GLC_AUDIO_RECORD"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_START=%s", getenv("GLC_START"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_COLORSPACE=%s", getenv("GLC_COLORSPACE"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_HOTKEY=%s", getenv("GLC_HOTKEY"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_RELOAD_HOTKEY=%s", getenv("GLC_RELOAD_HOTKEY"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_LOCK_FPS=%s", getenv("GLC_LOCK_FPS"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_TRY_PBO=%s", getenv("GLC_TRY_PBO"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_COMPRESS=%s", getenv("GLC_COMPRESS"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_SYNC=%s", getenv("GLC_SYNC"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_CAPTURE_DWORD_ALIGNED=%s", getenv("GLC_CAPTURE_DWORD_ALIGNED"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_INDICATOR=%s", getenv("GLC_INDICATOR"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_LOG=%s", getenv("GLC_LOG"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_LOG_FILE=%s", getenv("GLC_LOG_FILE"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_AUDIO_SKIP=%s", getenv("GLC_AUDIO_SKIP"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_AUDIO=%s", getenv("GLC_AUDIO"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_SIGHANDLER=%s", getenv("GLC_SIGHANDLER"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_CAPTURE_GLFINISH=%s", getenv("GLC_CAPTURE_GLFINISH"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "SDL_AUDIODRIVER=%s", getenv("SDL_AUDIODRIVER"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_CAPTURE=%s", getenv("GLC_CAPTURE"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_COMPRESSED_BUFFER_SIZE=%s", getenv("GLC_COMPRESSED_BUFFER_SIZE"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_UNCOMPRESSED_BUFFER_SIZE=%s", getenv("GLC_UNCOMPRESSED_BUFFER_SIZE"));
+	glc_log(&mpriv.glc, GLC_DEBUG, "main", "GLC_UNSCALED_BUFFER_SIZE=%s", getenv("GLC_UNSCALED_BUFFER_SIZE"));
+
 	return;
 err:
 	fprintf(stderr, "(glc) %s (%d)\n", strerror(ret), ret);
