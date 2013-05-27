@@ -455,6 +455,7 @@ void pulse_capture_connect_all() {
 	struct pulse_capture_stream_s *stream = pulse.capture_stream;
 
 	while(stream != NULL) {
+	        glc_log(pulse.glc, GLC_INFORMATION, "pulse", "pa_stream_connect_record() opened device: %s\n", stream->device);
 		if (pa_stream_connect_record(stream->pulse_stream, stream->device, NULL, 0) < 0) {
 			glc_log(pulse.glc, GLC_ERROR, "pulse", "pa_stream_connect_record() failed: %s\n", pa_strerror(pa_context_errno(c)));
 			return;

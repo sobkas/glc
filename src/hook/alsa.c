@@ -75,8 +75,8 @@ int alsa_init(glc_t *glc)
 
 	glc_log(alsa.glc, GLC_DEBUG, "alsa", "initializing");
 
-	if (getenv("GLC_AUDIO") && !getenv("GLC_USE_PULSEAUDIO"))
-		alsa.capture = atoi(getenv("GLC_AUDIO"));
+	if (!getenv("GLC_AUDIO") || getenv("GLC_USE_PULSEAUDIO") )
+		alsa.capture = 0;
 	else
 		alsa.capture = 1;
 
