@@ -32,5 +32,4 @@ sox -m $au $tmp/audio-out.wav
 avconv -y -i $tmp/video.mkv -i $tmp/audio-out.wav -vcodec copy $2.mkv
 rm -r $tmp
 rm $2
-else
 fi
