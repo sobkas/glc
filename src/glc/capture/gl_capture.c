@@ -454,7 +454,7 @@ int gl_capture_get_pixels(gl_capture_t gl_capture, struct gl_capture_video_strea
 
 	glReadBuffer(gl_capture->capture_buffer);
 	glPixelStorei(GL_PACK_ALIGNMENT, gl_capture->pack_alignment);
-	glReadPixels(video->cx, video->cy, video->cw, video->ch, gl_capture->format, GL_UNSIGNED_BYTE, to);
+	glReadPixels(video->cx, video->cy, video->cw, video->ch, gl_capture->format, GL_UNSIGNED_INT_8_8_8_8_REV, to);
 
 	glPopClientAttrib();
 	glPopAttrib();
@@ -591,7 +591,7 @@ int gl_capture_start_pbo(gl_capture_t gl_capture, struct gl_capture_video_stream
 	glReadBuffer(gl_capture->capture_buffer);
 	glPixelStorei(GL_PACK_ALIGNMENT, gl_capture->pack_alignment);
 	/* to = ((char *)NULL + (offset)) */
-	glReadPixels(video->cx, video->cy, video->cw, video->ch, gl_capture->format, GL_UNSIGNED_BYTE, NULL);
+	glReadPixels(video->cx, video->cy, video->cw, video->ch, gl_capture->format, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
 
 	video->pbo_active = 1;
 
