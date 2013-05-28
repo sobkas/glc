@@ -21,8 +21,6 @@ Architecture: any
 Depends: libglc-capture0 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
-Multi-Arch: same                                                                                                                                                                        
-Pre-Depends: ${misc:Pre-Depends}
 Description: ALSA & OpenGL capture tool for Linux
  glc is an ALSA & OpenGL capture tool for Linux. It consists of a generic video
  capture, playback and processing library and a set of tools built around that

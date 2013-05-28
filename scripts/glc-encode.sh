@@ -19,14 +19,14 @@ audios=""
 au=""
 for i in `seq 1 $1`;
 do
-	i386-linux-gnu-glc-play $2 -o - -a $i|avconv -i - -y $tmp/audio_$i.wav
+	glc-play $2 -o - -a $i|avconv -i - -y $tmp/audio_$i.wav
 	#audios='-i '$tmp'/audio'$i'.mkv '$audios
 	au=$tmp'/audio_'$i'.wav '$au
 done
 #echo $au
 #echo $audios
 ls -lh $tmp
-i386-linux-gnu-glc-play $2 -o - -y 1|avconv -i - -y $tmp/video.mkv
+glc-play $2 -o - -y 1|avconv -i - -y $tmp/video.mkv
 
 if [ x$3 != 'xkeep' ];then
 	if [ $1 == '1' ];then

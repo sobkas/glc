@@ -1,3 +1,2 @@
-#! /usr/bin/dh-exec
-usr/bin/glc-capture => usr/bin/${DEB_HOST_MULTIARCH}-glc-capture
-usr/bin/glc-play => usr/bin/${DEB_HOST_MULTIARCH}-glc-play
+usr/bin/glc-capture
+usr/bin/glc-play
