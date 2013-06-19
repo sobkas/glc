@@ -1,0 +1,64 @@
+#! /usr/bin/env bash
+
+keep=FALSE
+audio_streams=1
+video_bitrate=590
+filename=""
+rotate=FALSE
+while getopts a:i:k:vb:r flag; do
+  case $flag in
+    a)
+      audio_streams="$OPTARG"
+      ;;
+    i)
+      filename="$OPTARG"
+      ;;
+    k)
+      keep=TRUE
+      ;;
+    vb)
+      video_bitrate="$OPTARG"
+      ;;
+    r)
+      rotate=TRUE
+      ;;
+    ?)
+      echo "-a: number of audio streams \n -i name of input file \n -k keep temporary files, don't consolidate video "
+      exit;
+      ;;
+  esac
+done
+
+for i in `whereis -b avconv ffmpeg`;do
+        if [ -f "$i" ];then
+        encoder="$i"
+        fi
+done
+
+tmp=`mktemp -d`
+echo "Temp directory:" $tmp
+echo "Encoded with" $encoder
+
+au=""
+for i in `seq 1 "$audio_streams"`;
+do
+    echo $i
+	glc-play "$filename" -o - -a $i |$encoder -i - -y "$tmp"/audio_$i.wav
+	au="$tmp"'/audio_'$i'.wav '$au
+done
+if [ $rotate == FALSE ];then
+glc-play "$filename" -o - -y 1|$encoder -i - -y -threads auto -b:v "$video_bitrate"k -r 25  "$tmp"/video.mkv 
+else
+glc-play "$filename" -o - -y 1|$encoder -i - -vf vflip -y -threads auto -b:v "$video_bitrate"k -r 25  "$tmp"/video.mkv 
+fi
+
+if [ $keep == FALSE ];then
+	if [ $audio_streams == '1' ];then
+		mv "$tmp"/audio_1.wav "$tmp"/audio-out.wav
+	else
+		sox -m "$au" $tmp/audio-out.wav
+		rm "$tmp"/audio_*.wav
+	fi
+$encoder -y -i "$tmp"/video.mkv  -i "$tmp"/audio-out.wav -vcodec copy -b:v 170k -b:a 128k "$filename".mkv
+rm -r "$tmp"
+fi
